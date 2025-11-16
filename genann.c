@@ -73,6 +73,12 @@ double genann_act_sigmoid(const genann *ann unused, double a) {
     return 1.0 / (1 + exp(-a));
 }
 
+double genann_act_sigmoid_derivative(const genann *ann unused, double a) {
+	const double result = genann_act_sigmoid(ann, a);
+	return result * (1 - result); 
+	
+}
+
 void genann_init_sigmoid_lookup(const genann *ann) {
         const double f = (sigmoid_dom_max - sigmoid_dom_min) / LOOKUP_SIZE;
         int i;
@@ -120,7 +126,7 @@ genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs) {
 
     /* Allocate extra size for weights, outputs, and deltas. */
     const int size = sizeof(genann) + sizeof(double) * (total_weights + total_neurons + (total_neurons - inputs));
-    genann *ret = malloc(size);
+    genann *ret = GENANN_MALLOC(size);
     if (!ret) return 0;
 
     ret->inputs = inputs;
@@ -140,6 +146,9 @@ genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs) {
 
     ret->activation_hidden = genann_act_sigmoid_cached;
     ret->activation_output = genann_act_sigmoid_cached;
+	
+	ret->activation_hidden_derivative = genann_act_sigmoid_derivative;
+	ret->activation_output_derivative = genann_act_sigmoid_derivative;
 
     genann_init_sigmoid_lookup(ret);
 
@@ -178,7 +187,7 @@ genann *genann_read(FILE *in) {
 
 genann *genann_copy(genann const *ann) {
     const int size = sizeof(genann) + sizeof(double) * (ann->total_weights + ann->total_neurons + (ann->total_neurons - ann->inputs));
-    genann *ret = malloc(size);
+    genann *ret = GENANN_MALLOC(size);
     if (!ret) return 0;
 
     memcpy(ret, ann, size);
@@ -204,7 +213,7 @@ void genann_randomize(genann *ann) {
 
 void genann_free(genann *ann) {
     /* The weight, output, and delta pointers go to the same buffer. */
-    free(ann);
+    GENANN_FREE(ann);
 }
 
 
@@ -296,7 +305,7 @@ void genann_train(genann const *ann, double const *inputs, double const *desired
             }
         } else {
             for (j = 0; j < ann->outputs; ++j) {
-                *d++ = (*t - *o) * *o * (1.0 - *o);
+				*d++ = (*t - *o) * ann->activation_output_derivative(ann, *o);
                 ++o; ++t;
             }
         }
@@ -327,8 +336,7 @@ void genann_train(genann const *ann, double const *inputs, double const *desired
                 const double forward_weight = ww[windex];
                 delta += forward_delta * forward_weight;
             }
-
-            *d = *o * (1.0-*o) * delta;
+			*d = ann->activation_hidden_derivative(ann, *o) * delta;
             ++d; ++o;
         }
     }
@@ -394,6 +402,11 @@ void genann_train(genann const *ann, double const *inputs, double const *desired
 
 
 void genann_write(genann const *ann, FILE *out) {
+	/* Safety check if file is invalid */ 
+	if (!out) {
+		return;
+	
+	}
     fprintf(out, "%d %d %d %d", ann->inputs, ann->hidden_layers, ann->hidden, ann->outputs);
 
     int i;

@@ -28,6 +28,7 @@
 #define GENANN_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +40,10 @@ extern "C" {
 #define GENANN_RANDOM() (((double)rand())/RAND_MAX)
 #endif
 
+/* Memory management; Redefine these to change the internal malloc/free system. */
+#define GENANN_MALLOC(sz) malloc(sz)
+#define GENANN_FREE(sz) free(sz)
+
 struct genann;
 
 typedef double (*genann_actfun)(const struct genann *ann, double a);
@@ -47,11 +52,17 @@ typedef struct genann {
     /* How many inputs, outputs, and hidden neurons. */
     int inputs, hidden_layers, hidden, outputs;
 
-    /* Which activation function to use for hidden neurons. Default: gennann_act_sigmoid_cached*/
+    /* Which activation function to use for hidden neurons. Default: genann_act_sigmoid_cached*/
     genann_actfun activation_hidden;
 
-    /* Which activation function to use for output. Default: gennann_act_sigmoid_cached*/
+    /* Which activation function to use for output. Default: genann_act_sigmoid_cached*/
     genann_actfun activation_output;
+
+	/* Which activation function to use for the hidden layer's derivative. Default: genann_act_sigmoid_derivative */
+	genann_actfun activation_hidden_derivative;
+	
+	/* Which activation function to use for the output layer's derivative. Default: genann_act_sigmoid_derivative */
+	genann_actfun activation_output_derivative;
 
     /* Total number of weights, and size of weights buffer. */
     int total_weights;
