@@ -108,6 +108,7 @@ void genann_write(genann const *ann, FILE *out);
 void genann_init_sigmoid_lookup(const genann *ann);
 double genann_act_sigmoid(const genann *ann, double a);
 double genann_act_sigmoid_cached(const genann *ann, double a);
+double genann_act_sigmoid_derivative(const genann *ann unused, double a);
 double genann_act_threshold(const genann *ann, double a);
 double genann_act_linear(const genann *ann, double a);
 

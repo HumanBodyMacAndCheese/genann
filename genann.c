@@ -74,8 +74,7 @@ double genann_act_sigmoid(const genann *ann unused, double a) {
 }
 
 double genann_act_sigmoid_derivative(const genann *ann unused, double a) {
-	const double result = genann_act_sigmoid(ann, a);
-	return result * (1 - result); 
+	return a * (1 - a); 
 	
 }
 
