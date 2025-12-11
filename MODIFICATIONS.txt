@@ -1,0 +1,5 @@
+In order to comply with the zlib license I have to state the following modifications:
+
+* Added derivatives for the hidden and output activation functions in the "genann" struct
+* Added sigmoid derivative to genann.h and as the default activation function
+* Added ability to add swap out the default malloc/free functions for custom onces (e.x. mimalloc or dlmalloc)
